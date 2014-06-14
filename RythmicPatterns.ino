@@ -35,7 +35,7 @@ int eighth = 0;
 
 ////////////////////////////////////////////////
 
-int gateOpenOnThisRow[noOfRows] = {1, 1, 1, 1, 1, 1, 1, 1};
+int gateOpenOnThisRow[noOfRows] = {1, 1, 1, 1, 1};
 
 ////////////////////////////////////////////////
 
@@ -64,73 +64,48 @@ void setup() {
 
 //  ==================== start of loop() =======================
 void loop() {  
-            
-      // go through drum matrix
-      for (int row=0; row<noOfRows; row++) { // temporal. start with first beat point...
-      
-        for (int column=0; column<noOfColumns; column++) { // vertical, outputs. start with output 0...
-  
-            
-            // set drumProgram
-            int drumProgram = (analogRead(0) / (1023/noOfDrumPrograms)); if (drumProgram > 0) {  drumProgram--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
-            
+          
+    // go through drum matrix
+    for (int row=0; row<noOfRows; row++) { // temporal. start with first beat point...
+      for (int column=0; column<noOfColumns; column++) { // vertical, outputs. start with output 0...
 
+          // set drumProgram
+          int drumProgram = (analogRead(0) / (1023/noOfDrumPrograms)); if (drumProgram > 0) {  drumProgram--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
 
-            // Serial.println(drumProgram);
+          // if pattern shows a hit. open gate
+          if (drums[drumProgram][column][row] == 1) {
+            thereWillBeATrigger = 1;
+          }
 
+          // Set random numbers for potential addition
+          int randValueAdditions = random(0, 1023);
+          if (randValueAdditions < analogRead(2)) {   
+            thereWillBeATrigger = 1;
+          }
 
+          // Set random numbers for potential subtraction
+          int randValueSubtractions = random(0, 1023);
+          if (randValueSubtractions < analogRead(3)) {   
+            thereWillBeATrigger = 0;
+          }
 
+          // TRIGGER
 
+          if (thereWillBeATrigger == 1) {
+            digitalWrite(pinOffset + column, 0);
+            digitalWrite(pinOffset + column, 1);
+            thereWillBeATrigger = 0;
 
-
-
-            // if pattern shows a hit. open gate
-            if (drums[drumProgram][column][row] == 1) {
-              thereWillBeATrigger = 1;
-            }
-
-            // Set random numbers for potential addition
-            int randValueAdditions = random(0, 1023);
-            if (randValueAdditions < analogRead(2)) {   
-              thereWillBeATrigger = 1;
-            }
-
-            // Set random numbers for potential subtraction
-            int randValueSubtractions = random(0, 1023);
-            if (randValueSubtractions < analogRead(3)) {   
-              thereWillBeATrigger = 0;
-            }
-
-            delay(1);
-
-            if (thereWillBeATrigger == 1) {
-              digitalWrite(pinOffset + column, 1);
-              if (gateOpenOnThisRow[row] == 1) {
-                
-              }
-              gateOpenOnThisRow[row] = 1;
-              thereWillBeATrigger = 0;
-            }
-
-            // if gate is open on this row, close gate.
             if (gateOpenOnThisRow[row] == 1) {
-              digitalWrite(pinOffset + column, 0);
+              digitalWrite(pinOffset + row, 0);
               gateOpenOnThisRow[row] = 0;
             }
-            
-            // if (anslag[column] == 1) { // if this is a hit
-            //   if (anslagEveryOther[column] == 1) { // if the indicator variable shows 1
-            //     digitalWrite(pinOffset+(column), LOW);  // turn gate off
-            //     digitalWrite(pinOffset+(column), HIGH);  // turn gate on 
-            //     digitalWrite(pinOffset+(column), LOW);  // turn gate off
-            //     anslagEveryOther[column] = 0; // indicator value set to 0 to indicate that the last hit turned gate off... so next one should keep it on and not go through this loop
-            //   }
-            //   else {
-            //     anslagEveryOther[column] = 1; // so that next time there will be a turning off 
-            //   }
-            // }
-                 
-        }
+
+            else {
+              gateOpenOnThisRow[row] = 1;
+            }
+          }
+        } // gone through all columns
         delay(1023 - analogRead(1)); // delay after each beat == bpm
       }
       
